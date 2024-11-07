@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "torch_mdct"
+version = "0.1.0"
+authors = [{name = "Kinyugo Maina", email = "kinyugomaina@gmail.com"}]
+description = "A PyTorch implementation of the Modified Discrete Cosine Transform (MDCT) and its inverse for audio processing."
+readme = "README.md"
+licence = {file = "LICENSE"}
+requires-python = ">=3.8"
+keywords = ["pytorch", "mdct", "imdct", "audio", "signal processing"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = ["torch"]
+
+[project.optional-dependencies]
+notebook = ["matplotlib", "ipython"]
+
+[project.urls]
+Homepage = "https://github.com/Kinyugo/torch_mdct"
+Issues = "https://github.com/Kinyugo/torch_mdct/issues"

@@ -69,9 +69,6 @@ def mdct(
     # Unflatten the output
     spectrogram = spectrogram.reshape(shape[:-1] + spectrogram.shape[-2:])
 
-    # Scale the output
-    spectrogram = (1.0 / math.sqrt(4.0 * win_length)) * spectrogram
-
     return spectrogram
 
 
@@ -99,9 +96,6 @@ def imdct(
     hop_length = win_length // 2
     n_freqs, n_frames = spectrogram.shape[-2:]
     n_samples = hop_length * (n_frames + 1)
-
-    # Unscale the input
-    spectrogram = math.sqrt(4.0 * win_length) * spectrogram
 
     # Flatten the input tensor
     shape = spectrogram.shape

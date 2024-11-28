@@ -1,6 +1,6 @@
 # torch_mdct
 
-PyTorch implementation of Modified Discrete Cosine Transform and Inverse Modified Discrete Cosine Transform.
+A fast and clean implementation of the Modified Discrete Cosine Transform (MDCT) algorithm in PyTorch.
 
 ## Installation 
 

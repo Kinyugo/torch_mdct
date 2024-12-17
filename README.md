@@ -1,6 +1,6 @@
 # torch_mdct
 
-A fast and clean implementation of the Modified Discrete Cosine Transform (MDCT) algorithm in PyTorch.
+A PyTorch implementation of the Modified Discrete Cosine Transform (MDCT) and its inverse for audio processing.
 
 ## Installation 
 
@@ -12,14 +12,14 @@ pip install torch_mdct
 
 ```python
 import torchaudio
-from torch_mdct import MDCT, IMDCT
+from torch_mdct import IMDCT, MDCT, kaiser_bessel_derived, vorbis
 
 # Load a sample waveform 
 waveform, sample_rate = torchaudio.load("/path/to/audio.file")
 
 # Initialize the mdct and imdct transforms
-mdct = MDCT(win_length=2048)
-imdct = IMDCT(win_length=2048)
+mdct = MDCT(win_length=1024, window_fn=vorbis, window_kwargs=None, center=True)
+imdct = IMDCT(win_length=1024, window_fn=vorbis, window_kwargs=None, center=True)
 
 # Transform waveform into mdct spectrogram
 spectrogram = mdct(waveform)

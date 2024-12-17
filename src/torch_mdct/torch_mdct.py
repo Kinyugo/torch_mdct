@@ -1,11 +1,35 @@
-from functools import partial
-from typing import Any, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional
 
 import torch
 from torch import nn
 
 from .functional import imdct, mdct
-from .windows import kaiser_bessel_derived, vorbis
+from .windows import vorbis
+
+
+def create_window(
+    win_length: int,
+    window_fn: Callable[..., torch.Tensor],
+    window_kwargs: Optional[Dict[str, Any]],
+) -> torch.Tensor:
+    """
+    Utility function to create a window tensor.
+
+    Parameters
+    ----------
+    win_length : int
+        The length of the window.
+    window_fn : callable
+        Function to generate the window.
+    window_kwargs : dict, optional
+        Additional keyword arguments to pass to the window function.
+
+    Returns
+    -------
+    torch.Tensor
+        Precomputed window tensor.
+    """
+    return window_fn(win_length, **(window_kwargs or {}))
 
 
 class MDCT(nn.Module):
@@ -16,37 +40,48 @@ class MDCT(nn.Module):
     ----------
     win_length : int
         The length of the window.
-    window_fn : callable, optional
-        A function to generate the window, by default vorbis.
+    window_fn : callable, default=vorbis
+        A function to generate the window, by default vorbis. kaiser_bessel_derived is also available.
     window_kwargs : dict, optional
-        Additional keyword arguments to pass to the window function, by default {}.
-    center : bool, optional
+        Additional keyword arguments to pass to the window function, by default None.
+    center : bool, default=True
         If True, pad the waveform on both sides with half the window length, by default True.
 
     Attributes
     ----------
     window : torch.Tensor
         The window tensor.
-    mdct : callable
-        The MDCT function with the specified center parameter.
 
     Methods
     -------
     forward(waveform: torch.Tensor) -> torch.Tensor
         Compute the MDCT of the input waveform.
+
+    Examples
+    --------
+    >>> waveform = torch.rand(2, 44100) # (channels, n_samples)
+    >>> mdct = MDCT(win_length=1024)
+    >>> spectrogram = mdct(waveform)
+    >>> print(spectrogram.shape)  # (2, 512, 89)
     """
 
     def __init__(
         self,
         win_length: int,
-        window_fn: Union[kaiser_bessel_derived, vorbis] = vorbis,
-        window_kwargs: Dict[str, Any] = {},
+        window_fn: Callable[..., torch.Tensor] = vorbis,
+        window_kwargs: Optional[Dict[str, Any]] = None,
         center: bool = True,
     ) -> None:
         super().__init__()
 
-        self.register_buffer("window", window_fn(win_length, **window_kwargs))
-        self.mdct = partial(mdct, center=center)
+        self.win_length = win_length
+        self.window_fn = window_fn
+        self.window_kwargs = window_kwargs or {}
+        self.center = center
+
+        self.register_buffer(
+            "window", create_window(self.win_length, self.window_fn, self.window_kwargs)
+        )
 
     def forward(self, waveform: torch.Tensor) -> torch.Tensor:
         """
@@ -60,9 +95,9 @@ class MDCT(nn.Module):
         Returns
         -------
         torch.Tensor
-            MDCT spectrogram of the input waveform of shape (..., win_length // 2, n_frames).
+            MDCT spectrogram of shape (..., win_length // 2, n_frames).
         """
-        return self.mdct(waveform, self.window)
+        return mdct(waveform, self.window, center=self.center)
 
 
 class IMDCT(nn.Module):
@@ -73,37 +108,49 @@ class IMDCT(nn.Module):
     ----------
     win_length : int
         The length of the window.
-    window_fn : callable, optional
-        A function to generate the window, by default vorbis.
+    window_fn : callable, default=vorbis
+        A function to generate the window, by default vorbis. kaiser_bessel_derived is also available.
     window_kwargs : dict, optional
-        Additional keyword arguments to pass to the window function, by default {}.
-    center : bool, optional
-        If True, remove the padding added during MDCT, by default True.
+        Additional keyword arguments to pass to the window function, by default None.
+    center : bool, default=True
+        If True, pad the waveform on both sides with half the window length, by default True.
 
     Attributes
     ----------
     window : torch.Tensor
         The window tensor.
-    imdct : callable
-        The iMDCT function with the specified center parameter.
 
     Methods
     -------
     forward(spectrogram: torch.Tensor, *, n_samples: Optional[int] = None) -> torch.Tensor
         Compute the iMDCT of the input spectrogram.
+
+    Examples
+    --------
+    >>> spectrogram = torch.rand(2, 512, 89) # (channels, win_length // 2, n_frames)
+    >>> imdct = IMDCT(win_length=1024)
+    >>> waveform = imdct(spectrogram, n_samples=44100) # (2, 44100)
     """
 
     def __init__(
         self,
         win_length: int,
-        window_fn: Union[kaiser_bessel_derived, vorbis] = vorbis,
-        window_kwargs: Dict[str, Any] = {},
+        window_fn: Callable[..., torch.Tensor] = vorbis,
+        window_kwargs: Optional[Dict[str, Any]] = None,
         center: bool = True,
     ) -> None:
         super().__init__()
 
-        self.register_buffer("window", window_fn(win_length, **window_kwargs))
-        self.imdct = partial(imdct, center=center)
+        # Save parameters for introspection or serialization
+        self.win_length = win_length
+        self.window_fn = window_fn
+        self.window_kwargs = window_kwargs or {}
+        self.center = center
+
+        # Register window tensor
+        self.register_buffer(
+            "window", create_window(self.win_length, self.window_fn, self.window_kwargs)
+        )
 
     def forward(
         self, spectrogram: torch.Tensor, *, n_samples: Optional[int] = None
@@ -117,11 +164,11 @@ class IMDCT(nn.Module):
             Input MDCT spectrogram tensor of shape (..., win_length // 2, n_frames).
 
         n_samples : int, optional
-            The length of the output waveform, by default None.
+            Desired length of the output waveform.
 
         Returns
         -------
         torch.Tensor
             Reconstructed waveform tensor of shape (..., n_samples).
         """
-        return self.imdct(spectrogram, self.window, n_samples=n_samples)
+        return imdct(spectrogram, self.window, center=self.center, n_samples=n_samples)

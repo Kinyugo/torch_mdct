@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "torch_mdct"
-version = "0.3.0"
+version = "0.4.0"
 authors = [{name = "Kinyugo Maina", email = "kinyugomaina@gmail.com"}]
 description = "A PyTorch implementation of the Modified Discrete Cosine Transform (MDCT) and its inverse for audio processing."
 readme = "README.md"

@@ -89,7 +89,7 @@ class IMDCT(nn.Module):
 
     Methods
     -------
-    forward(spectrogram: torch.Tensor) -> torch.Tensor
+    forward(spectrogram: torch.Tensor, *, n_samples: Optional[int] = None) -> torch.Tensor
         Compute the iMDCT of the input spectrogram.
     """
 
@@ -106,7 +106,7 @@ class IMDCT(nn.Module):
         self.imdct = partial(imdct, center=center)
 
     def forward(
-        self, spectrogram: torch.Tensor, length: Optional[int] = None
+        self, spectrogram: torch.Tensor, *, n_samples: Optional[int] = None
     ) -> torch.Tensor:
         """
         Compute the iMDCT of the input spectrogram.
@@ -116,7 +116,7 @@ class IMDCT(nn.Module):
         spectrogram : torch.Tensor
             Input MDCT spectrogram tensor of shape (..., win_length // 2, n_frames).
 
-        length : int, optional
+        n_samples : int, optional
             The length of the output waveform, by default None.
 
         Returns
@@ -124,5 +124,4 @@ class IMDCT(nn.Module):
         torch.Tensor
             Reconstructed waveform tensor of shape (..., n_samples).
         """
-        length = length or -1  # By default, return the full waveform
-        return self.imdct(spectrogram, self.window)[..., :length]
+        return self.imdct(spectrogram, self.window, n_samples=n_samples)

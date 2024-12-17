@@ -1,4 +1,5 @@
 import math
+from typing import Optional
 
 import torch
 from torch.nn import functional as F
@@ -16,7 +17,7 @@ def mdct(
         Input waveform tensor of shape (..., n_samples).
     window : torch.Tensor
         Window tensor of shape (win_length,).
-    center : bool, optional
+    center : bool, default=True
         If True, pad the waveform on both sides with half the window length, by default True.
 
     Returns
@@ -69,11 +70,20 @@ def mdct(
     # Unflatten the output
     spectrogram = spectrogram.reshape(shape[:-1] + spectrogram.shape[-2:])
 
+    # Normalize the output to account for the FFT scaling (sqrt(win_length)) and the window contribution (sqrt(win_length // 2)).
+    # The window's power, sum(window ** 2), equals (win_length // 2) due to energy conservation with 50% overlap.
+    scaling_factor = 1.0 / math.sqrt(win_length * (win_length // 2))
+    spectrogram = spectrogram * scaling_factor
+
     return spectrogram
 
 
 def imdct(
-    spectrogram: torch.Tensor, window: torch.Tensor, center: bool = True
+    spectrogram: torch.Tensor,
+    window: torch.Tensor,
+    center: bool = True,
+    *,
+    n_samples: Optional[int] = None,
 ) -> torch.Tensor:
     """
     Compute the inverse Modified Discrete Cosine Transform (iMDCT) of a spectrogram.
@@ -84,8 +94,10 @@ def imdct(
         Input MDCT spectrogram tensor of shape (..., win_length // 2, n_frames).
     window : torch.Tensor
         Window tensor of shape (win_length,).
-    center : bool, optional
+    center : bool, default=True
         If True, remove the padding added during MDCT, by default True.
+    n_samples : int, optional
+        The length of the output waveform, by default return waveform of shape (..., (win_length // 2) * (n_frames + 1)).
 
     Returns
     -------
@@ -95,7 +107,11 @@ def imdct(
     win_length = window.shape[-1]
     hop_length = win_length // 2
     n_freqs, n_frames = spectrogram.shape[-2:]
-    n_samples = hop_length * (n_frames + 1)
+
+    # Normalize the input to account for the FFT scaling (sqrt(win_length)) and the window contribution (sqrt(win_length // 2)).
+    # The window's power, sum(window ** 2), equals (win_length // 2) due to energy conservation with 50% overlap.
+    scaling_factor = 1.0 / math.sqrt(win_length * (win_length // 2))
+    spectrogram = spectrogram / scaling_factor
 
     # Flatten the input tensor
     shape = spectrogram.shape
@@ -132,7 +148,10 @@ def imdct(
 
     # Recover the waveform with the time-domain aliasing cancelling principle
     waveform = F.fold(
-        spectrogram, (1, n_samples), kernel_size=(1, win_length), stride=(1, hop_length)
+        spectrogram,
+        output_size=(1, hop_length * (n_frames + 1)),
+        kernel_size=(1, win_length),
+        stride=(1, hop_length),
     )
 
     # Remove padding
@@ -141,5 +160,9 @@ def imdct(
 
     # Unflatten the output
     waveform = waveform.reshape((*shape[:-2], -1))
+
+    # Return the waveform with the specified length
+    if n_samples is not None:
+        waveform = waveform[..., :n_samples]
 
     return waveform

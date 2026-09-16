@@ -5,7 +5,7 @@
 #   2. Create a GitHub release with a tag of the form `vX.Y.Z` (e.g. `v0.5.0`).
 #   3. This workflow runs the test suite, builds the distribution from that tag
 #      (hatch-vcs derives the version from the tag), verifies the built version
-#      matches the tag, and uploads to PyPI.
+#      matches the tag, and uploads to PyPI via trusted publishing.
 
 name: Publish to PyPI
 
@@ -68,13 +68,17 @@ jobs:
     name: Upload to PyPI
     needs: build
     runs-on: ubuntu-latest
-    environment: pypi
+    # Uses PyPI trusted publishing (OIDC): PyPI is configured to trust this
+    # repository, this workflow file, and the `pypi` environment, so no API
+    # token secret is needed.
+    environment:
+      name: pypi
+      url: https://pypi.org/project/torch_mdct/
+    permissions:
+      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}

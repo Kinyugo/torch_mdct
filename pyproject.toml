@@ -20,6 +20,7 @@ dependencies = ["torch"]
 
 [project.optional-dependencies]
 notebook = ["matplotlib", "ipython"]
+test = ["pytest"]
 
 [project.urls]
 Homepage = "https://github.com/Kinyugo/torch_mdct"

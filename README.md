@@ -1,5 +1,8 @@
 # torch_mdct
 
+[![CI](https://github.com/Kinyugo/torch_mdct/actions/workflows/ci.yml/badge.svg)](https://github.com/Kinyugo/torch_mdct/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/torch_mdct.svg)](https://pypi.org/project/torch_mdct/)
+
 A PyTorch implementation of the Modified Discrete Cosine Transform (MDCT) and its inverse for audio processing.
 
 ## Installation 

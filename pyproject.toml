@@ -1,20 +1,27 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "torch_mdct"
-version = "0.4.1"
+dynamic = ["version"]
 authors = [{name = "Kinyugo Maina", email = "kinyugomaina@gmail.com"}]
 description = "A PyTorch implementation of the Modified Discrete Cosine Transform (MDCT) and its inverse for audio processing."
 readme = "README.md"
-licence = {file = "LICENSE"}
-requires-python = ">=3.8"
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
 keywords = ["pytorch", "mdct", "imdct", "audio", "signal processing"]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Scientific/Engineering",
 ]
 dependencies = ["torch"]
 
@@ -25,3 +32,19 @@ test = ["pytest"]
 [project.urls]
 Homepage = "https://github.com/Kinyugo/torch_mdct"
 Issues = "https://github.com/Kinyugo/torch_mdct/issues"
+Changelog = "https://github.com/Kinyugo/torch_mdct/blob/main/CHANGELOG.md"
+
+# The package version is derived from git tags (e.g. tag `v0.5.0` -> version `0.5.0`).
+# Untagged commits get a PEP 440 dev version such as `0.5.1.dev3+g1a2b3c4`.
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/torch_mdct/_version.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["notebooks/", ".github/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

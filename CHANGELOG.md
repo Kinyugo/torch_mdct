@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-16
+
 ### Fixed
 - `kaiser_bessel_derived` now builds its base Kaiser window with `periodic=False`.
   The previous asymmetric base window violated the Princen-Bradley condition, which
@@ -30,5 +32,6 @@ to [Semantic Versioning](https://semver.org/).
 
 Last release with a hard-coded version. See the GitHub releases page for earlier history.
 
-[Unreleased]: https://github.com/Kinyugo/torch_mdct/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/Kinyugo/torch_mdct/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/Kinyugo/torch_mdct/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/Kinyugo/torch_mdct/releases/tag/v0.4.1

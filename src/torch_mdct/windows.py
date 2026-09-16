@@ -30,7 +30,7 @@ def kaiser_bessel_derived(
 
     half_w_length = win_length // 2
     kaiser_w = torch.kaiser_window(
-        half_w_length + 1, True, beta, dtype=dtype, device=device
+        half_w_length + 1, periodic=False, beta=beta, dtype=dtype, device=device
     )
     kaiser_w_csum = torch.cumsum(kaiser_w, dim=-1)
     half_w = torch.sqrt(kaiser_w_csum[:-1] / kaiser_w_csum[-1])
